@@ -1,0 +1,8 @@
+[2025-11-07T17:08:33.576222+00:00] Worker qworker-1 executing: nonexistent_cmd
+[2025-11-07T17:08:33.579445+00:00] FAIL exit=127; stderr=/bin/sh: nonexistent_cmd: command not found
+[2025-11-07T17:08:36.593374+00:00] Worker qworker-2 executing: nonexistent_cmd
+[2025-11-07T17:08:36.596694+00:00] FAIL exit=127; stderr=/bin/sh: nonexistent_cmd: command not found
+[2025-11-07T17:08:45.633969+00:00] Worker qworker-2 executing: nonexistent_cmd
+[2025-11-07T17:08:45.646016+00:00] FAIL exit=127; stderr=/bin/sh: nonexistent_cmd: command not found
+[2025-11-07T17:09:12.925835+00:00] Worker qworker-1 executing: nonexistent_cmd
+[2025-11-07T17:09:12.939240+00:00] FAIL exit=127; stderr=/bin/sh: nonexistent_cmd: command not found

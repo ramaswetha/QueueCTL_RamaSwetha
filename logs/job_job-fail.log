@@ -1,0 +1,12 @@
+[2025-11-07T17:08:33.572706+00:00] Worker qworker-2 executing: bash -c "exit 2"
+[2025-11-07T17:08:33.577035+00:00] FAIL exit=2; stderr=
+[2025-11-07T17:08:36.587440+00:00] Worker qworker-2 executing: bash -c "exit 2"
+[2025-11-07T17:08:36.592645+00:00] FAIL exit=2; stderr=
+[2025-11-07T17:08:45.631076+00:00] Worker qworker-1 executing: bash -c "exit 2"
+[2025-11-07T17:08:45.648913+00:00] FAIL exit=2; stderr=
+[2025-11-07T17:08:52.779402+00:00] Worker qworker-1 executing: bash -c "exit 2"
+[2025-11-07T17:08:52.794751+00:00] FAIL exit=2; stderr=
+[2025-11-07T17:08:55.815346+00:00] Worker qworker-1 executing: bash -c "exit 2"
+[2025-11-07T17:08:55.830369+00:00] FAIL exit=2; stderr=
+[2025-11-07T17:09:04.873673+00:00] Worker qworker-1 executing: bash -c "exit 2"
+[2025-11-07T17:09:04.892075+00:00] FAIL exit=2; stderr=

@@ -1,0 +1,2 @@
+[2025-11-07T17:08:33.571472+00:00] Worker qworker-1 executing: echo hello from job-success
+[2025-11-07T17:08:33.575513+00:00] SUCCESS stdout: hello from job-success
