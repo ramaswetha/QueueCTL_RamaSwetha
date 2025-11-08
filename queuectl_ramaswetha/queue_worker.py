@@ -7,6 +7,7 @@ import subprocess
 import time
 import uuid
 from multiprocessing import Process
+from datetime import datetime, timezone
 from .job_db import JobDatabase
 from .utils import utcnow_iso
 
@@ -32,11 +33,20 @@ class QueueWorker:
             f.write(f"[{utcnow_iso()}] {text}\n")
 
     def _execute(self, command, timeout=None):
+        """Run the job command with timeout handling."""
         try:
-            proc = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+            proc = subprocess.run(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=timeout or 30,
+            )
             out = proc.stdout.decode("utf-8", errors="replace")
             err = proc.stderr.decode("utf-8", errors="replace")
             return proc.returncode, out, err
+        except subprocess.TimeoutExpired:
+            return 1, "", f"Job timed out after {timeout or 30} seconds"
         except Exception as ex:
             return 1, "", str(ex)
 
@@ -57,12 +67,36 @@ class QueueWorker:
             if not job:
                 time.sleep(self.poll_interval)
                 continue
+
+            # Respect scheduled jobs (run_at)
+            run_at = job.get("run_at")
+            if run_at:
+                try:
+                    # parse ISO formatted time (with or without offset)
+                    run_dt = datetime.fromisoformat(run_at)
+                    now = datetime.now(timezone.utc)
+                    # normalize run_dt to UTC-aware for comparison
+                    if run_dt.tzinfo is None:
+                        run_dt = run_dt.replace(tzinfo=timezone.utc)
+                    run_dt_utc = run_dt.astimezone(timezone.utc)
+                    if run_dt_utc > now:
+                        # not yet time to run this job; release CPU and continue
+                        time.sleep(self.poll_interval)
+                        # Note: the job remains in pending state but was claimed; however claim_job selects only pending.
+                        # To keep behavior consistent, continue here (worker will pick next job next loop)
+                        continue
+                except Exception:
+                    # if parsing fails, ignore and proceed
+                    pass
+
             job_id = job["id"]
             cmd = job["command"]
             attempts = job.get("attempts", 0)
-            print(f"[{self.name}] claimed job {job_id} (attempts={attempts}) cmd='{cmd}'")
-            self._log_job(job_id, f"Worker {self.name} executing: {cmd}")
-            code, out, err = self._execute(cmd)
+            timeout = job.get("timeout", 30)  # default 30s
+
+            print(f"[{self.name}] claimed job {job_id} (attempts={attempts}) cmd='{cmd}' (timeout={timeout}s)")
+            self._log_job(job_id, f"Worker {self.name} executing: {cmd} (timeout={timeout}s)")
+            code, out, err = self._execute(cmd, timeout=timeout)
             if code == 0:
                 self._log_job(job_id, f"SUCCESS stdout: {out.strip()}")
                 db.update_on_success(job_id)

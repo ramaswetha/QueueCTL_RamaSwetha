@@ -1,6 +1,7 @@
 # JobDatabase: persistence layer using SQLite
 # Author: Rama Swetha
 # Notes: Uses transactions to safely claim jobs to avoid duplicate processing.
+# Added columns: priority, timeout, run_at to support bonus features.
 
 import sqlite3
 import os
@@ -30,7 +31,9 @@ class JobDatabase:
             updated_at TEXT NOT NULL,
             run_at TEXT,
             last_error TEXT,
-            worker_id TEXT
+            worker_id TEXT,
+            priority INTEGER DEFAULT 0,
+            timeout INTEGER DEFAULT 30
         );
         """)
         cur.execute("""
@@ -59,19 +62,24 @@ class JobDatabase:
 
     # ----- Jobs CRUD -----
     def enqueue(self, job: dict):
+        """
+        Enqueue a job dict. Expected keys: id, command.
+        Optional keys: max_retries, run_at (ISO str), priority (int), timeout (int)
+        """
         now = utcnow_iso()
         cur = self.conn.cursor()
-        # defaults
         job_state = job.get("state", "pending")
         attempts = int(job.get("attempts", 0))
         max_retries = int(job.get("max_retries", int(self.get_config("default_max_retries") or 3)))
         run_at = job.get("run_at", None)
+        priority = int(job.get("priority", 0))
+        timeout = int(job.get("timeout", 30))
         cur.execute("""
-            INSERT INTO jobs(id, command, state, attempts, max_retries, created_at, updated_at, run_at, last_error, worker_id)
-            VALUES(?,?,?,?,?,?,?,?,?,?)
+            INSERT INTO jobs(id, command, state, attempts, max_retries, created_at, updated_at, run_at, last_error, worker_id, priority, timeout)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             job["id"], job["command"], job_state, attempts, max_retries,
-            now, now, run_at, job.get("last_error"), None
+            now, now, run_at, job.get("last_error"), None, priority, timeout
         ))
         self.conn.commit()
 
@@ -103,7 +111,7 @@ class JobDatabase:
             cur.execute("""
                 SELECT id FROM jobs
                 WHERE state='pending' AND (run_at IS NULL OR run_at <= ?)
-                ORDER BY created_at ASC
+                ORDER BY priority DESC, created_at ASC
                 LIMIT 1
             """, (now,))
             row = cur.fetchone()
@@ -167,4 +175,17 @@ class JobDatabase:
         deleted = cur.rowcount
         self.conn.commit()
         return deleted
+
+    def get_metrics(self):
+        cur = self.conn.cursor()
+        total = cur.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
+        completed = cur.execute("SELECT COUNT(*) FROM jobs WHERE state='completed'").fetchone()[0]
+        failed = cur.execute("SELECT COUNT(*) FROM jobs WHERE state='failed'").fetchone()[0]
+        dead = cur.execute("SELECT COUNT(*) FROM jobs WHERE state='dead'").fetchone()[0]
+        avg = cur.execute("""
+            SELECT AVG((julianday(updated_at) - julianday(created_at)) * 86400.0)
+            FROM jobs
+            WHERE state='completed'
+        """).fetchone()[0]
+        return {"total": total, "completed": completed, "failed": failed, "dead": dead, "avg_duration": avg}
 
