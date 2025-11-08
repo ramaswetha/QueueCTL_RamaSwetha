@@ -1,112 +1,231 @@
-QueueCTL_RamaSwetha
+---
 
-QueueCTL is a command-line (CLI) based background job queue system built in Python 3.12.
-It allows you to enqueue background jobs, process them with multiple worker processes, automatically retry failed jobs using exponential backoff, and maintain a Dead Letter Queue (DLQ) for permanently failed tasks.
-The system includes persistent job storage using SQLite so that no jobs are lost across restarts.
+# **QueueCTL_RamaSwetha**
 
-Setup Instructions
+**QueueCTL** is a command-line (CLI) based background job queue system built in **Python 3.12**.
+It allows you to enqueue background jobs, process them with multiple worker processes, automatically retry failed jobs with **exponential backoff**, and maintain a **Dead Letter Queue (DLQ)** for permanently failed tasks.
 
-To run QueueCTL locally, follow these steps:
+It also includes a **real-time web dashboard** for monitoring jobs, priorities, metrics, and system state — all with **dark/light mode support**.
 
-Clone the repository using
-git clone https://github.com/<your-username>/QueueCTL_RamaSwetha.git
-and navigate to the project folder using
+The system uses **SQLite** for persistent job storage, ensuring that no jobs are lost across restarts.
+
+---
+
+## **Setup Instructions**
+
+To run QueueCTL locally:
+
+1️⃣ **Clone the repository**
+
+```bash
+git clone https://github.com/ramaswetha/QueueCTL_RamaSwetha.git
 cd QueueCTL_RamaSwetha
+```
 
-Create a virtual environment using
+2️⃣ **Create a virtual environment**
+
+```bash
 python3 -m venv .venv
+```
 
-Activate the virtual environment:
-On macOS or Linux, run source .venv/bin/activate.
-On Windows, run .venv\Scripts\activate.
+3️⃣ **Activate the environment**
 
-This project uses only Python standard libraries, so no external packages need to be installed.
+* On macOS/Linux:
 
-Once the environment is ready, you can run CLI commands using
+  ```bash
+  source .venv/bin/activate
+  ```
+* On Windows:
+
+  ```bash
+  .venv\Scripts\activate
+  ```
+
+4️⃣ No external dependencies are needed — QueueCTL runs entirely on **Python standard libraries**.
+
+5️⃣ **Run commands:**
+
+```bash
 python -m queuectl_ramaswetha.cli <command>
-or execute the test script with
+```
+
+6️⃣ Or run the complete test suite:
+
+```bash
 ./scripts/run_tests.sh
+```
 
+---
 
-Usage Examples
+## 💻 **Usage Examples**
 
-Below are some example commands that demonstrate how QueueCTL works:
+### Enqueue a new job:
 
-To enqueue a new job:
+```bash
 python -m queuectl_ramaswetha.cli enqueue '{"id":"job1","command":"echo hello world"}'
+```
 
-To start worker processes:
+### Start worker processes:
+
+```bash
 python -m queuectl_ramaswetha.cli worker start --count 2
+```
 
-To stop all running workers gracefully:
+### Stop all workers gracefully:
+
+```bash
 python -m queuectl_ramaswetha.cli worker stop
+```
 
-To check the current status of all jobs and workers:
+### View job and worker status:
+
+```bash
 python -m queuectl_ramaswetha.cli status
+```
 
-To list jobs by their state (for example, pending jobs):
+### List jobs by state:
+
+```bash
 python -m queuectl_ramaswetha.cli list --state pending
+```
 
-To view jobs in the Dead Letter Queue (DLQ):
+### View Dead Letter Queue (DLQ):
+
+```bash
 python -m queuectl_ramaswetha.cli dlq list
+```
 
-To retry a specific job from the DLQ:
+### Retry a DLQ job:
+
+```bash
 python -m queuectl_ramaswetha.cli dlq retry job1
+```
 
-To change configuration settings such as retry count or backoff base:
+### Adjust configuration:
+
+```bash
 python -m queuectl_ramaswetha.cli config set max-retries 3
-and
 python -m queuectl_ramaswetha.cli config set backoff_base 2
-
-To view a configuration value:
 python -m queuectl_ramaswetha.cli config get backoff_base
+```
 
-To remove all completed jobs from the queue:
+### Purge completed jobs:
+
+```bash
 python -m queuectl_ramaswetha.cli purge --completed
+```
 
-All logs for each job are saved in the ./logs/ directory, and the SQLite database file qctl.db stores job states and configurations persistently.
+All job logs are stored in the `./logs/` directory.
+The `qctl.db` SQLite file holds persistent job data, states, and configuration.
 
+---
 
-Architecture Overview
+## 🌐 **Web Dashboard**
 
-QueueCTL consists of three main components — the CLI interface, the SQLite job database, and worker processes.
-When a job is enqueued, it is stored in the database with its command, state, and retry information. Workers, running as separate processes, continuously poll for pending jobs and claim them atomically to avoid duplicate execution. Each job is executed via Python’s subprocess module, and its exit code determines whether it completes successfully or fails.
+QueueCTL provides a simple **Flask-based web dashboard** to visualize the queue in real time.
 
-Failed jobs are retried automatically using exponential backoff (delay = base ^ attempts). Once the maximum retry limit is reached, the job moves to the Dead Letter Queue (DLQ).
-All job states — pending, processing, completed, failed, and dead — are stored persistently, allowing recovery after restarts. The system also supports graceful shutdown, ensuring workers finish their current job before stopping.
+### Start the dashboard:
 
+```bash
+python -m queuectl_ramaswetha.dashboard
+```
 
-Assumptions and Trade-offs
+Then visit:
+ [http://localhost:8080](http://localhost:8080)
 
-QueueCTL prioritizes reliability, simplicity, and transparency over distributed scalability. SQLite was chosen for persistence because it is lightweight, requires no setup, and suits single-machine operation.
-The system is intentionally single-node, with all workers sharing one local database file. While this limits horizontal scalability, it ensures deterministic behavior and ease of maintenance.
+The dashboard shows:
 
-The retry and backoff mechanisms are simple and predictable, and logging is file-based for clarity. The overall design focuses on readability and robustness rather than complex distributed coordination.
+* Total jobs by state (pending, processing, completed, failed, dead)
+* Job priority, timeout, and retry counts
+* Automatic live refresh every 5 seconds
+* **Dark/Light mode toggle** 
 
+---
 
-Testing Instructions
+## **Architecture Overview**
 
-To verify the functionality of QueueCTL, a complete automated shell script is provided under scripts/run_tests.sh.
-You can run it using the command:
+QueueCTL has three main components:
 
+* **CLI Interface:** Handles all user commands (enqueue, worker, DLQ, config).
+* **SQLite Database:** Stores jobs, states, retries, priorities, and scheduling info persistently.
+* **Worker Processes:** Poll the database, claim pending jobs atomically, and execute commands via Python’s subprocess module.
+
+### Job Lifecycle:
+
+1. **Pending** → waiting to be picked up
+2. **Processing** → being executed by a worker
+3. **Completed** → finished successfully
+4. **Failed** → temporarily failed (retryable)
+5. **Dead** → permanently failed (moved to DLQ)
+
+Workers respect **exponential backoff** for retries (`delay = base ^ attempts`) and **graceful shutdown** (finishing current job before stopping).
+
+---
+
+## **Extra Features Implemented**
+
+**Job Timeout Handling** — each job has a configurable timeout (default 30s).
+**Job Priority Queues** — higher priority jobs are executed first.
+**Scheduled/Delayed Jobs (`run_at`)** — run jobs at a future timestamp.
+**Job Output Logging** — each job writes detailed logs under `logs/job_<id>.log`.
+**Metrics & Execution Stats** — total, completed, failed, and dead counts visible via CLI and dashboard.
+**Web Dashboard with Dark Mode** — real-time monitoring interface with theme toggle.
+
+---
+
+## **Assumptions & Trade-offs**
+
+* Focused on **local reliability and simplicity** rather than distributed scalability.
+* SQLite chosen for persistence — lightweight and no setup required.
+* Single-node, multi-process architecture (easy to extend to multi-host later).
+* Logging is file-based for transparency.
+* Prioritizes readability, modularity, and correctness over complexity.
+
+---
+
+## **Testing Instructions**
+
+Run all automated tests with:
+
+```bash
 ./scripts/run_tests.sh
+```
 
-This script performs a full end-to-end test of the system. It enqueues both successful and failing jobs, tests automatic retries with exponential backoff, validates the Dead Letter Queue, checks duplicate job handling, verifies persistence after worker restarts, and ensures that workers shut down gracefully when stopped.
+This verifies:
 
-You can also manually test individual components by running CLI commands such as enqueue, status, dlq list, or config get to inspect the system’s state.
-After running the tests, check the logs/ folder to view each job’s execution output and verify that the database file qctl.db contains the persisted job data.
+* Successful and failing job execution
+* Retry + exponential backoff
+* Dead Letter Queue handling
+* Duplicate ID rejection
+* Persistence across restarts
+* Graceful worker shutdown
 
+You can also manually test each command via the CLI or monitor progress on the dashboard.
 
-Demo Recording
+---
 
-A short screen recording demonstrates the complete workflow of the system — including enqueuing jobs, starting workers, retries, DLQ movement, and configuration commands.
+## **Demo Recording**
 
-Watch the CLI demo here:
-https://drive.google.com/file/d/1Ow803r0Bt8oAvw5VYsbXSU_mL_ct2CSG/view?usp=sharing
+Watch the complete CLI and Dashboard demo here:
+🎬 [https://drive.google.com/file/d/1Ow803r0Bt8oAvw5VYsbXSU_mL_ct2CSG/view?usp=sharing](https://drive.google.com/file/d/1Ow803r0Bt8oAvw5VYsbXSU_mL_ct2CSG/view?usp=sharing)
 
+---
 
-Author
+## **Checklist Before Submission**
 
-Developed by Rama Swetha Ponnaganti as part of the FLAM assignment.
-This project demonstrates understanding of concurrent job execution, persistence, fault tolerance, and CLI-based system design using pure Python.
+* All required commands functional
+* Jobs persist after restart
+* Retry and exponential backoff implemented
+* DLQ operational and retryable
+* CLI user-friendly and documented
+* Modular, maintainable code structure
+* Includes automated test script
+* Dashboard functional with live updates and dark mode
+
+---
+
+## **Author**
+
+Developed by **Rama Swetha Ponnaganti** as part of the **FLAM Backend Developer Internship Assignment**.
+This project demonstrates expertise in concurrent background processing, persistence, fault tolerance, configuration management, and UI monitoring using pure Python.
 
