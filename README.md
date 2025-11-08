@@ -1,6 +1,6 @@
 ---
 
-# **QueueCTL_RamaSwetha**
+## **QueueCTL_RamaSwetha**
 
 **QueueCTL** is a command-line (CLI) based background job queue system built in **Python 3.12**.
 It allows you to enqueue background jobs, process them with multiple worker processes, automatically retry failed jobs with **exponential backoff**, and maintain a **Dead Letter Queue (DLQ)** for permanently failed tasks.
@@ -120,7 +120,7 @@ The `qctl.db` SQLite file holds persistent job data, states, and configuration.
 
 ---
 
-## 🌐 **Web Dashboard**
+## **Web Dashboard**
 
 QueueCTL provides a simple **Flask-based web dashboard** to visualize the queue in real time.
 
