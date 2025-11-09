@@ -160,14 +160,13 @@ Workers respect **exponential backoff** for retries (`delay = base ^ attempts`) 
 
 ---
 
-## **Extra Features Implemented**
+## **Features Implemented**
 
 **Job Timeout Handling** — each job has a configurable timeout (default 30s).
 **Job Priority Queues** — higher priority jobs are executed first.
 **Scheduled/Delayed Jobs (`run_at`)** — run jobs at a future timestamp.
 **Job Output Logging** — each job writes detailed logs under `logs/job_<id>.log`.
 **Metrics & Execution Stats** — total, completed, failed, and dead counts visible via CLI and dashboard.
-**Web Dashboard with Dark Mode** — real-time monitoring interface with theme toggle.
 
 ---
 
