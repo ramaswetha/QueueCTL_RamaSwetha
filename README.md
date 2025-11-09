@@ -4,7 +4,7 @@
 **QueueCTL** is a command-line (CLI) based background job queue system built in **Python 3.12**.
 It allows you to enqueue background jobs, process them with multiple worker processes, automatically retry failed jobs with **exponential backoff**, and maintain a **Dead Letter Queue (DLQ)** for permanently failed tasks.
 
-It also includes a **real-time web dashboard** for monitoring jobs, priorities, metrics, and system state — all with **dark/light mode support**.
+It also includes a **real-time web dashboard** for monitoring jobs, priorities, metrics, and system state.
 
 The system uses **SQLite** for persistent job storage, ensuring that no jobs are lost across restarts.
 
