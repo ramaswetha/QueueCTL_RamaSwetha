@@ -56,7 +56,7 @@ python -m queuectl_ramaswetha.cli <command>
 
 ---
 
-## 💻 **Usage Examples**
+## **Usage Examples**
 
 ### Enqueue a new job:
 
@@ -205,7 +205,7 @@ You can also manually test each command via the CLI or monitor progress on the d
 ## **Demo Recording**
 
 Watch the complete CLI and Dashboard demo here:
-🎬 [https://drive.google.com/file/d/1Ow803r0Bt8oAvw5VYsbXSU_mL_ct2CSG/view?usp=sharing](https://drive.google.com/file/d/1rJKRvH8lRRyY9-yMMP-v7gY1GYVG7x1X/view?usp=sharing)
+ [https://drive.google.com/file/d/1Ow803r0Bt8oAvw5VYsbXSU_mL_ct2CSG/view?usp=sharing](https://drive.google.com/file/d/1rJKRvH8lRRyY9-yMMP-v7gY1GYVG7x1X/view?usp=sharing)
 
 ---
 
