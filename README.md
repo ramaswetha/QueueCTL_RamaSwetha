@@ -220,10 +220,3 @@ Watch the complete CLI and Dashboard demo here:
 * Includes automated test script
 * Dashboard functional with live updates and dark mode
 
----
-
-## **Author**
-
-Developed by **Rama Swetha Ponnaganti** as part of the **FLAM Backend Developer Internship Assignment**.
-This project demonstrates expertise in concurrent background processing, persistence, fault tolerance, configuration management, and UI monitoring using pure Python.
-
