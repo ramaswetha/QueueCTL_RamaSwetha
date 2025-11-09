@@ -207,16 +207,3 @@ You can also manually test each command via the CLI or monitor progress on the d
 Watch the complete CLI and Dashboard demo here:
  [https://drive.google.com/file/d/1Ow803r0Bt8oAvw5VYsbXSU_mL_ct2CSG/view?usp=sharing](https://drive.google.com/file/d/1rJKRvH8lRRyY9-yMMP-v7gY1GYVG7x1X/view?usp=sharing)
 
----
-
-## **Checklist Before Submission**
-
-* All required commands functional
-* Jobs persist after restart
-* Retry and exponential backoff implemented
-* DLQ operational and retryable
-* CLI user-friendly and documented
-* Modular, maintainable code structure
-* Includes automated test script
-* Dashboard functional with live updates and dark mode
-
